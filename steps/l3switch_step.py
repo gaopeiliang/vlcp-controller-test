@@ -267,6 +267,26 @@ def update_subnet_gateway(context, id, gateway):
     call_in_docker(context.host1, command)
 
 
+@then('update subnet pre host config "{id}" "{host}" "{bridge}" "{vhost}" "{cidr}" "{local_address}" "{gateway}"')
+def update_subnet_pre_host_config(context, id, host, bridge, vhost, cidr, local_address, gateway):
+    host_map = {"host1": context.host1, "host2": context.host2}
+    
+    url = 'http://127.0.0.1:8081/ovsdbmanager/getsystemids'
+    cmd = 'curl -s "%s"' % url
+
+    result = call_in_docker(host_map[host], cmd)
+
+    msg = json.loads(result)
+    systemid= msg['result'][0]
+    
+    config = "`[{'systemid':%s,'bridge':%s,'vhost':%s,'cidr':%s,'local_address':%s,'gateway':%s}]`" % (systemid, bridge, vhost, cidr, local_address, gateway)
+    
+    c = update_subnet(id=id, pre_host_config=config)
+    
+    command = "curl -s '%s'" % c
+
+    call_in_docker(host_map[host], command)
+    
 @given('update router name "{id}" "{name}"')
 def update_router_name(context, id, name):
 
